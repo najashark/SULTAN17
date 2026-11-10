@@ -133,7 +133,7 @@ install_ksu() {
         --retry 5 \
         --retry-delay 5 \
         --retry-all-errors \
-        "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" \
+        "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" \
         -o "$setup_script"
 
     bash "$setup_script" "$KSU_BRANCH"
@@ -197,10 +197,15 @@ patch_susfs_ksu() {
 		"$KERNEL_REPO" \
 		"$KERNEL_REPO/susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch"
 
-	msg "Applying SUSFS KernelSU patch"
-	apply_patch_optional \
-		"$KERNEL_REPO/KernelSU" \
-		"$KERNEL_REPO/susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
+	# BakaSU (ReSukiSU) carries its own in-tree SUSFS Kconfig, so the upstream
+	# 10_enable_susfs_for_ksu.patch must not be applied on top of it.
+	# BakaSU does not declare CONFIG_KSU_SUSFS_PRIORITY_UID_FILTER yet, hence the
+	# new SUSFS cred helpers have no callers -> clang -Werror=unused-function.
+	msg "Marking unused SUSFS cred helpers as __maybe_unused (BakaSU)"
+	if [ -f "$KERNEL_REPO/fs/susfs.c" ]; then
+		sed -i -E 's/^static (struct cred \*susfs_switch_to_ksu_domain\(void\))/static __maybe_unused \1/' "$KERNEL_REPO/fs/susfs.c" || true
+		sed -i -E 's/^static (void susfs_restore_creds\(struct cred \*orig_cred\))/static __maybe_unused \1/' "$KERNEL_REPO/fs/susfs.c" || true
+	fi
 }
 
 patch_susfs_ksu_next() {
