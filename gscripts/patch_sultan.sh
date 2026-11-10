@@ -206,6 +206,18 @@ patch_susfs_ksu() {
 		sed -i -E 's/^static (struct cred \*susfs_switch_to_ksu_domain\(void\))/static __maybe_unused \1/' "$KERNEL_REPO/fs/susfs.c" || true
 		sed -i -E 's/^static (void susfs_restore_creds\(struct cred \*orig_cred\))/static __maybe_unused \1/' "$KERNEL_REPO/fs/susfs.c" || true
 	fi
+
+	# BakaSU's static_export_check greps the source for these declarations and
+	# aborts the build while they are still static (it needs them visible in
+	# kallsyms for its selinux_hide feature). The SUSFS patch already un-statics
+	# write_op; drop static from the remaining ones it checks on 6.1.
+	msg "Exporting selinux symbols required by BakaSU selinux_hide"
+	for f in security/selinux/selinuxfs.c security/selinux/ss/services.c; do
+		[ -f "$KERNEL_REPO/$f" ] || continue
+		sed -i -E 's/^static (const struct file_operations sel_handle_status_ops)/\1/' "$KERNEL_REPO/$f" || true
+		sed -i -E 's/^static (void security_dump_masked_av)/\1/' "$KERNEL_REPO/$f" || true
+		sed -i -E 's/^static (void context_struct_compute_av)/\1/' "$KERNEL_REPO/$f" || true
+	done
 }
 
 patch_susfs_ksu_next() {
