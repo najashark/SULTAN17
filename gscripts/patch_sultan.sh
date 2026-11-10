@@ -403,6 +403,13 @@ if ! grep -q "^CONFIG_KSU=y$" "$DEFCONFIG"; then
         echo "CONFIG_KSU=y" >> "$DEFCONFIG"
 fi
 
+# BakaSU static symbol export check: without CONFIG_KALLSYMS_ALL the driver
+# requires exported sel_handle_status_ops. Enabling KALLSYMS_ALL is the
+# supported route (kernel/tools/static_export_check.mk).
+if ! grep -q "^CONFIG_KALLSYMS_ALL=y$" "$DEFCONFIG"; then
+        echo "CONFIG_KALLSYMS_ALL=y" >> "$DEFCONFIG"
+fi
+
 #SUSFS
 if ! grep -q "^CONFIG_KSU_SUSFS_SUS_SU=n$" "$DEFCONFIG"; then
         echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$DEFCONFIG"
