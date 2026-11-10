@@ -1,0 +1,32 @@
+name: BakaSU Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Device target
+        type: choice
+        default: zumapro
+        options:
+          - gs201
+          - zuma
+          - zumapro
+      variant:
+        description: Variant
+        type: choice
+        default: ksu-susfs-vpnhide
+        options:
+          - ksu-susfs
+          - ksu-susfs-vpnhide
+      source_branch:
+        description: Kernel branch to build
+        type: string
+        default: 17.0.0-cp3a
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      branch: ${{ inputs.source_branch }}
+      target: ${{ inputs.target }}
+      variant: ${{ inputs.variant }}
